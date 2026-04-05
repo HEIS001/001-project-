@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>WorkSight — Admin Login</title>
+<link rel="icon" type="image/svg+xml" href="/static/icons/favicon.svg"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#05070f;--surface:#0c1020;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--accent:#00d4ff;--accent2:#0066ff;--accent-dim:rgba(0,212,255,0.12);--text:#f0f4ff;--text2:#8a9bb8;--text3:#4a5a75;--red:#ff4d6d;--red-dim:rgba(255,77,109,0.1);--radius:16px;--radius-sm:10px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.03) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;}
+.orb{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;}
+.orb1{width:500px;height:500px;background:rgba(0,102,255,0.12);top:-200px;right:-100px;}
+.orb2{width:400px;height:400px;background:rgba(0,212,255,0.07);bottom:-100px;left:-100px;}
+.card{position:relative;z-index:1;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:48px 40px;width:100%;max-width:420px;animation:fadeUp 0.5s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.logo{display:flex;align-items:center;justify-content:center;gap:10px;font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--text);margin-bottom:8px;}
+.logo span{color:var(--accent);}
+.subtitle{text-align:center;color:var(--text3);font-size:13px;margin-bottom:36px;}
+.form-group{margin-bottom:16px;}
+label{display:block;font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:7px;}
+input{width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px 16px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;transition:border-color 0.2s,box-shadow 0.2s;}
+input::placeholder{color:var(--text3);}
+input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,212,255,0.1);}
+.btn{width:100%;padding:13px;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;border:none;background:linear-gradient(135deg,var(--accent2),var(--accent));color:#fff;margin-top:8px;transition:opacity 0.2s;}
+.btn:hover{opacity:0.88;}
+.err{padding:12px 14px;border-radius:8px;background:var(--red-dim);border:1px solid rgba(255,77,109,0.2);color:var(--red);font-size:13px;margin-bottom:14px;display:none;}
+.err.show{display:block;}
+.back{display:block;text-align:center;margin-top:20px;color:var(--text3);font-size:13px;text-decoration:none;transition:color 0.2s;}
+.back:hover{color:var(--accent);}
+.hint{text-align:center;margin-top:16px;font-size:11px;color:var(--text3);}
+</style>
+</head>
+<body>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="card">
+  <div class="logo">
+    <svg width="32" height="32" viewBox="0 0 64 64" fill="none"><rect width="64" height="64" rx="14" fill="#0A0F1E"/><path d="M12 20 L24 44 L32 28 L40 44 L52 20" stroke="#00D4FF" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="32" cy="28" r="4" fill="#00D4FF"/><circle cx="12" cy="20" r="3" fill="#0066FF"/><circle cx="52" cy="20" r="3" fill="#0066FF"/><circle cx="24" cy="44" r="3" fill="#0066FF"/><circle cx="40" cy="44" r="3" fill="#0066FF"/></svg>
+    Work<span>Sight</span>
+  </div>
+  <p class="subtitle">Admin access only</p>
+  <div id="err" class="err">Invalid username or password</div>
+  <div class="form-group">
+    <label>Username</label>
+    <input type="text" id="username" placeholder="admin" autocomplete="username"/>
+  </div>
+  <div class="form-group">
+    <label>Password</label>
+    <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()"/>
+  </div>
+  <button class="btn" onclick="login()">Sign in to dashboard</button>
+  <a href="/" class="back">← Back to staff sign-in</a>
+  <p class="hint">Default: admin / admin123 — change in production</p>
+</div>
+<script>
+async function login(){
+  const btn=document.querySelector('.btn');
+  btn.textContent='Signing in...'; btn.disabled=true;
+  const res=await fetch('/admin/login',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({username:document.getElementById('username').value,password:document.getElementById('password').value})
+  });
+  if(res.ok){window.location='/admin';}
+  else{document.getElementById('err').classList.add('show');btn.textContent='Sign in to dashboard';btn.disabled=false;}
+}
+</script>
+</body>
+</html>
