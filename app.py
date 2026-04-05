@@ -2,6 +2,13 @@ from flask import Flask, render_template, request, jsonify, session, redirect, u
 from datetime import datetime, timedelta
 import sqlite3, os, base64, math, secrets, string, hashlib, json
 
+# Load .env file automatically
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(32)
 DB = "instance/worksight.db"
@@ -74,7 +81,6 @@ def init_db():
         );
         """)
 
-# ── Pages ─────────────────────────────────────────────────────────────────────
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -89,7 +95,6 @@ def admin():
         return redirect(url_for("index"))
     return render_template("admin.html")
 
-# ── Company register ──────────────────────────────────────────────────────────
 @app.route("/api/company/register", methods=["POST"])
 def company_register():
     d = request.json
@@ -114,7 +119,6 @@ def company_register():
     except sqlite3.IntegrityError:
         return jsonify({"error": "Email already registered."}), 409
 
-# ── Company login ─────────────────────────────────────────────────────────────
 @app.route("/api/company/login", methods=["POST"])
 def company_login():
     d = request.json
@@ -136,7 +140,6 @@ def company_logout():
     session.clear()
     return jsonify({"success": True})
 
-# ── Staff join via code ───────────────────────────────────────────────────────
 @app.route("/api/staff/join", methods=["POST"])
 def staff_join():
     d         = request.json
@@ -169,7 +172,6 @@ def staff_join():
         "building_name": company["building_name"] or "the building"
     })
 
-# ── Attendance register ───────────────────────────────────────────────────────
 @app.route("/api/attendance/register", methods=["POST"])
 def attendance_register():
     d          = request.json
@@ -218,7 +220,6 @@ def attendance_register():
              dept, purpose, action, ts, lat, lng, int(gps_ok), distance_m, selfie_path))
     return jsonify({"success": True, "message": f"{name} signed {action} successfully.", "timestamp": ts})
 
-# ── Admin dashboard data ──────────────────────────────────────────────────────
 @app.route("/api/admin/dashboard")
 def admin_dashboard():
     if "company_id" not in session:
@@ -279,7 +280,6 @@ def update_settings():
                      (d.get("building_name"), d.get("max_distance", 300), session["company_id"]))
     return jsonify({"success": True})
 
-# ── AI Insight ────────────────────────────────────────────────────────────────
 @app.route("/api/ai/insight", methods=["POST"])
 def ai_insight():
     if "company_id" not in session:
@@ -311,10 +311,19 @@ Data:
         "max_tokens": 400,
         "messages": [{"role": "user", "content": prompt}]
     }).encode()
+
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        return jsonify({"insight": "⚠ API key not set. Add ANTHROPIC_API_KEY=your-key to your .env file."})
+
     req = urllib.request.Request(
         "https://api.anthropic.com/v1/messages",
         data=payload,
-        headers={"Content-Type": "application/json"},
+        headers={
+            "Content-Type": "application/json",
+            "x-api-key": api_key,
+            "anthropic-version": "2023-06-01"
+        },
         method="POST"
     )
     try:
