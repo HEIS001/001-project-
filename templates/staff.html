@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>WorkSight — Staff Portal</title>
+<link rel="icon" type="image/svg+xml" href="/static/icons/worksight-icon.svg"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{--navy:#0A0F1E;--navy2:#0F172A;--navy3:#1E293B;--sky:#38BDF8;--sky2:#0EA5E9;--sky3:#BAE6FD;--gold:#F59E0B;--green:#10B981;--red:#EF4444;--white:#F8FAFC;--muted:#94A3B8;--border:rgba(56,189,248,0.15);--font:'Sora',sans-serif;--mono:'JetBrains Mono',monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--navy);color:var(--white);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(56,189,248,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,0.04) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;z-index:0}
+.orb{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0}
+.orb1{width:400px;height:400px;background:rgba(14,165,233,0.1);top:-80px;right:-80px}
+.orb2{width:350px;height:350px;background:rgba(16,185,129,0.07);bottom:0;left:-60px}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:64px;background:rgba(10,15,30,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo img{width:30px;height:30px}
+.nav-logo span{font-size:17px;font-weight:700;color:var(--white)}
+.nav-logo span em{color:var(--sky);font-style:normal}
+.nav-back{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;text-decoration:none;border:1px solid var(--border);color:var(--muted);font-family:var(--font);background:transparent;transition:all .2s}
+.nav-back:hover{border-color:var(--sky);color:var(--sky)}
+
+main{position:relative;z-index:1;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:5rem 1rem 2rem}
+
+.portal-wrap{width:100%;max-width:500px}
+.portal-header{text-align:center;margin-bottom:2rem}
+.portal-header h1{font-size:1.8rem;font-weight:700;letter-spacing:-.5px;margin-bottom:.4rem}
+.portal-header p{font-size:14px;color:var(--muted)}
+
+.card{background:rgba(15,23,42,0.9);border:1px solid var(--border);border-radius:20px;padding:2rem;backdrop-filter:blur(10px)}
+
+/* Steps */
+.steps-bar{display:flex;justify-content:space-between;margin-bottom:2rem;position:relative}
+.steps-bar::before{content:'';position:absolute;top:14px;left:14px;right:14px;height:1px;background:var(--border);z-index:0}
+.step-dot{display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;z-index:1}
+.dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);background:var(--navy2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--muted);transition:all .3s;font-family:var(--mono)}
+.dot.active{border-color:var(--sky);color:var(--sky);background:rgba(56,189,248,0.1)}
+.dot.done{border-color:var(--green);background:var(--green);color:#fff}
+.step-label{font-size:10px;color:var(--muted);font-weight:500;white-space:nowrap}
+.step-dot.active .step-label{color:var(--sky)}
+
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:6px;letter-spacing:.04em}
+.field input,.field select{width:100%;padding:11px 14px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;color:var(--white);font-size:14px;font-family:var(--font);outline:none;transition:border .2s}
+.field input:focus,.field select:focus{border-color:var(--sky)}
+.field input::placeholder{color:rgba(148,163,184,0.4)}
+.field select option{background:var(--navy2)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn{width:100%;padding:13px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--font);border:none;transition:all .2s;margin-top:.5rem}
+.btn.primary{background:linear-gradient(135deg,var(--sky2),var(--sky));color:#fff}
+.btn.primary:hover{box-shadow:0 0 25px rgba(14,165,233,0.4)}
+.btn.primary:disabled{opacity:.5;cursor:not-allowed}
+.btn.ghost{background:transparent;border:1px solid var(--border);color:var(--muted)}
+.btn.ghost:hover{border-color:var(--sky);color:var(--sky)}
+.btn.green{background:linear-gradient(135deg,#059669,var(--green));color:#fff}
+.btn.green:hover{box-shadow:0 0 25px rgba(16,185,129,0.4)}
+.btn.danger{background:linear-gradient(135deg,#DC2626,var(--red));color:#fff}
+.btn.danger:hover{box-shadow:0 0 25px rgba(239,68,68,0.4)}
+
+.alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:1rem;display:none}
+.alert.error{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#FCA5A5;display:block}
+.alert.success{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:#6EE7B7;display:block}
+.alert.warn{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:#FCD34D;display:block}
+
+/* Camera */
+.cam-wrap{position:relative;width:100%;aspect-ratio:4/3;background:var(--navy3);border-radius:14px;overflow:hidden;margin-bottom:12px;border:1px solid var(--border)}
+.cam-wrap video,.cam-wrap canvas,.cam-wrap img{width:100%;height:100%;object-fit:cover;border-radius:14px}
+.cam-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--muted)}
+.cam-icon{width:48px;height:48px;background:rgba(56,189,248,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.scan-ring{position:absolute;inset:20%;border:2px solid rgba(56,189,248,0.4);border-radius:50%;animation:spin 4s linear infinite;display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.cam-badge{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:var(--sky3);font-size:11px;padding:4px 10px;border-radius:100px;white-space:nowrap;font-family:var(--mono)}
+
+/* GPS */
+.gps-card{display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;margin-bottom:1rem}
+.gps-dot{width:10px;height:10px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:background .3s}
+.gps-dot.checking{background:var(--gold);animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.3}}
+.gps-dot.ok{background:var(--green)}
+.gps-dot.fail{background:var(--red)}
+.gps-info{flex:1}
+.gps-info strong{display:block;font-size:13px;color:var(--white)}
+.gps-info small{font-size:11px;color:var(--muted)}
+.gps-chk-btn{padding:6px 12px;background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.2);color:var(--sky);font-size:12px;border-radius:6px;cursor:pointer;font-family:var(--font)}
+
+/* Confirm card */
+.confirm-card{background:rgba(56,189,248,0.05);border:1px solid rgba(56,189,248,0.2);border-radius:14px;padding:1.25rem;margin-bottom:1rem}
+.confirm-row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+.confirm-row:last-child{border:none}
+.confirm-row span{color:var(--muted)}
+.confirm-row strong{color:var(--white)}
+.verify-badges{display:flex;gap:8px;margin-top:12px}
+.vbadge{padding:4px 12px;border-radius:100px;font-size:11px;font-weight:600;font-family:var(--mono)}
+.vbadge.gps{background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#6EE7B7}
+.vbadge.cam{background:rgba(56,189,248,0.15);border:1px solid rgba(56,189,248,0.3);color:var(--sky3)}
+.btn-row{display:flex;gap:10px;margin-top:.5rem}
+.btn-row .btn{margin-top:0}
+
+/* Toast */
+.toast-wrap{position:fixed;top:80px;right:1rem;z-index:999;display:flex;flex-direction:column;gap:8px}
+.toast{padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;animation:fadeIn .3s ease;max-width:320px;backdrop-filter:blur(10px)}
+.toast.ok{background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#6EE7B7}
+.toast.err{background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#FCA5A5}
+@keyframes fadeIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+.company-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.2);border-radius:100px;padding:4px 12px;font-size:12px;color:var(--sky);font-family:var(--mono);margin-bottom:1rem}
+</style>
+</head>
+<body>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<nav>
+  <a class="nav-logo" href="/">
+    <img src="/static/icons/worksight-icon.svg" alt="WorkSight"/>
+    <span>Work<em>Sight</em></span>
+  </a>
+  <a href="/" class="nav-back">← Home</a>
+</nav>
+
+<main>
+<div class="portal-wrap">
+  <div class="portal-header">
+    <h1>Staff Sign-In Portal</h1>
+    <p>Verify your identity to sign in or out of your building</p>
+  </div>
+
+  <div class="card" id="main-card">
+    <div class="steps-bar">
+      <div class="step-dot active" id="sd1"><div class="dot active" id="dot1">1</div><span class="step-label">Company</span></div>
+      <div class="step-dot" id="sd2"><div class="dot" id="dot2">2</div><span class="step-label">Details</span></div>
+      <div class="step-dot" id="sd3"><div class="dot" id="dot3">3</div><span class="step-label">Selfie</span></div>
+      <div class="step-dot" id="sd4"><div class="dot" id="dot4">4</div><span class="step-label">Location</span></div>
+      <div class="step-dot" id="sd5"><div class="dot" id="dot5">5</div><span class="step-label">Confirm</span></div>
+    </div>
+
+    <div id="alert-box"></div>
+
+    <!-- Step 1: Join code -->
+    <div id="step1">
+      <div class="field"><label>Company Join Code</label><input type="text" id="join-code" placeholder="e.g. AB12CD34" style="font-family:var(--mono);font-size:1.1rem;letter-spacing:4px;text-transform:uppercase"/></div>
+      <div class="field"><label>Your Full Name</label><input type="text" id="s-name" placeholder="e.g. Amara Okafor"/></div>
+      <button class="btn primary" onclick="doJoin()">Verify Code →</button>
+      <p style="text-align:center;font-size:12px;color:var(--muted);margin-top:1rem">Get your join code from your company admin</p>
+    </div>
+
+    <!-- Step 2: Staff details -->
+    <div id="step2" style="display:none">
+      <div class="company-tag" id="company-tag">🏢 Loading...</div>
+      <div class="field-row">
+        <div class="field"><label>Staff ID (optional)</label><input type="text" id="s-staffid" placeholder="STF-001"/></div>
+        <div class="field">
+          <label>Department</label>
+          <select id="s-dept">
+            <option value="">Select department</option>
+            <option>Engineering</option><option>Finance</option><option>HR</option>
+            <option>Operations</option><option>Sales</option><option>Marketing</option>
+            <option>Security</option><option>Management</option><option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Purpose of visit</label><input type="text" id="s-purpose" placeholder="e.g. Work, Meeting, Training"/></div>
+      <button class="btn primary" onclick="goStep(3)">Next: Take Selfie →</button>
+      <button class="btn ghost" onclick="goStep(1)" style="margin-top:8px">← Back</button>
+    </div>
+
+    <!-- Step 3: Selfie -->
+    <div id="step3" style="display:none">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:1rem">A live photo will be saved with your sign-in for identity verification.</p>
+      <div class="cam-wrap" id="cam-wrap">
+        <div class="cam-overlay" id="cam-overlay">
+          <div class="cam-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--sky)" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </div>
+          <span style="font-size:13px">Camera not started</span>
+        </div>
+        <div class="scan-ring" id="scan-ring"></div>
+        <video id="video" autoplay playsinline style="display:none"></video>
+        <canvas id="canvas" style="display:none"></canvas>
+        <div class="cam-badge" id="cam-badge" style="display:none">LIVE</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn ghost" id="btn-start" onclick="startCam()" style="flex:1;margin-top:0">Start Camera</button>
+        <button class="btn primary" id="btn-snap" onclick="snap()" style="flex:1;margin-top:0;display:none">Take Selfie</button>
+        <button class="btn ghost" id="btn-retake" onclick="retake()" style="flex:1;margin-top:0;display:none">Retake</button>
+      </div>
+      <button class="btn ghost" onclick="goStep(2)" style="margin-top:8px">← Back</button>
+    </div>
+
+    <!-- Step 4: GPS -->
+    <div id="step4" style="display:none">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:1rem">Your location will be verified against your company building. You must be within range.</p>
+      <div class="gps-card">
+        <div class="gps-dot" id="gps-dot"></div>
+        <div class="gps-info">
+          <strong id="gps-status">Not checked yet</strong>
+          <small id="gps-detail">Tap the button to verify your location</small>
+        </div>
+        <button class="gps-chk-btn" onclick="checkGPS()" id="gps-btn">Check GPS</button>
+      </div>
+      <button class="btn ghost" onclick="goStep(3)" style="margin-top:8px">← Back</button>
+    </div>
+
+    <!-- Step 5: Confirm -->
+    <div id="step5" style="display:none">
+      <div class="confirm-card">
+        <div class="confirm-row"><span>Name</span><strong id="cf-name">—</strong></div>
+        <div class="confirm-row"><span>Department</span><strong id="cf-dept">—</strong></div>
+        <div class="confirm-row"><span>Company</span><strong id="cf-company">—</strong></div>
+        <div class="confirm-row"><span>Building</span><strong id="cf-building">—</strong></div>
+        <div class="verify-badges">
+          <span class="vbadge gps">✓ GPS Verified</span>
+          <span class="vbadge cam">✓ Selfie Captured</span>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn green" onclick="submit('in')">Sign IN</button>
+        <button class="btn danger" onclick="submit('out')">Sign OUT</button>
+      </div>
+      <button class="btn ghost" onclick="goStep(4)" style="margin-top:8px">← Back</button>
+    </div>
+  </div>
+</div>
+</main>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+let state={companyId:null,companyName:'',buildingName:'',buildingLat:null,buildingLng:null,maxDist:300,lat:null,lng:null,selfie:null,step:1};
+let camStream=null;
+
+function toast(msg,type='ok'){
+  const w=document.getElementById('toasts');
+  const t=document.createElement('div');
+  t.className='toast '+type;t.textContent=msg;
+  w.appendChild(t);setTimeout(()=>t.remove(),4000);
+}
+function alert2(msg,type){
+  const b=document.getElementById('alert-box');
+  if(!msg){b.innerHTML='';return}
+  b.innerHTML=`<div class="alert ${type}">${msg}</div>`;
+}
+function setStep(n,el_id,cls){
+  const dot=document.getElementById(el_id);
+  const sd=document.getElementById('sd'+n);
+  dot.className='dot '+cls;
+  if(cls==='active')sd.classList.add('active');
+}
+function goStep(n){
+  alert2('');
+  for(let i=1;i<=5;i++){
+    document.getElementById('step'+i).style.display='none';
+    const dot=document.getElementById('dot'+i);
+    const sd=document.getElementById('sd'+i);
+    if(i<n){dot.className='dot done';dot.textContent='✓';sd.classList.add('active')}
+    else if(i===n){dot.className='dot active';dot.textContent=i;sd.classList.add('active')}
+    else{dot.className='dot';dot.textContent=i;sd.classList.remove('active')}
+  }
+  document.getElementById('step'+n).style.display='block';
+  state.step=n;
+}
+
+async function doJoin(){
+  const code=document.getElementById('join-code').value.trim().toUpperCase();
+  const name=document.getElementById('s-name').value.trim();
+  if(!code||!name){return alert2('Please enter your company code and your name.','error')}
+  const r=await fetch('/api/staff/join',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({join_code:code,name,department:'',staff_id:'',email:''})});
+  const d=await r.json();
+  if(d.error){return alert2(d.error,'error')}
+  state.companyId=d.company_id;state.companyName=d.company;
+  state.buildingLat=d.building_lat;state.buildingLng=d.building_lng;
+  state.maxDist=d.max_distance;state.buildingName=d.building_name;
+  document.getElementById('company-tag').textContent='🏢 '+d.company;
+  goStep(2);toast('Welcome! Company verified.','ok');
+}
+
+function startCam(){
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}}).then(s=>{
+    camStream=s;
+    const v=document.getElementById('video');
+    v.srcObject=s;v.style.display='block';
+    document.getElementById('cam-overlay').style.display='none';
+    document.getElementById('scan-ring').style.display='block';
+    document.getElementById('cam-badge').style.display='block';
+    document.getElementById('btn-start').style.display='none';
+    document.getElementById('btn-snap').style.display='flex';
+  }).catch(()=>alert2('Camera access denied. Please allow camera.','error'));
+}
+
+function snap(){
+  const v=document.getElementById('video');
+  const c=document.getElementById('canvas');
+  c.width=v.videoWidth||320;c.height=v.videoHeight||240;
+  c.getContext('2d').drawImage(v,0,0);
+  state.selfie=c.toDataURL('image/jpeg',0.8);
+  v.style.display='none';c.style.display='block';
+  document.getElementById('scan-ring').style.display='none';
+  document.getElementById('cam-badge').style.display='none';
+  document.getElementById('btn-snap').style.display='none';
+  document.getElementById('btn-retake').style.display='flex';
+  if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null}
+  toast('Selfie captured!');setTimeout(()=>goStep(4),900);
+}
+
+function retake(){
+  state.selfie=null;
+  document.getElementById('canvas').style.display='none';
+  document.getElementById('cam-overlay').style.display='flex';
+  document.getElementById('btn-retake').style.display='none';
+  document.getElementById('btn-start').style.display='flex';
+}
+
+function checkGPS(){
+  const dot=document.getElementById('gps-dot');
+  const status=document.getElementById('gps-status');
+  const detail=document.getElementById('gps-detail');
+  const btn=document.getElementById('gps-btn');
+  dot.className='gps-dot checking';status.textContent='Checking...';btn.disabled=true;
+  navigator.geolocation.getCurrentPosition(pos=>{
+    state.lat=pos.coords.latitude;state.lng=pos.coords.longitude;
+    const dist=haversine(state.lat,state.lng,state.buildingLat,state.buildingLng);
+    if(dist<=state.maxDist){
+      dot.className='gps-dot ok';status.textContent='Location verified ✓';
+      detail.textContent=`${Math.round(dist)}m from ${state.buildingName}`;
+      toast('Location verified!');
+      setTimeout(()=>{
+        const n=document.getElementById('s-name').value;
+        const dept=document.getElementById('s-dept').value||'—';
+        document.getElementById('cf-name').textContent=n;
+        document.getElementById('cf-dept').textContent=dept;
+        document.getElementById('cf-company').textContent=state.companyName;
+        document.getElementById('cf-building').textContent=state.buildingName;
+        goStep(5);
+      },800);
+    } else {
+      dot.className='gps-dot fail';status.textContent='Too far from building';
+      detail.textContent=`You are ${Math.round(dist)}m away. Must be within ${state.maxDist}m.`;
+      alert2(`You are ${Math.round(dist)}m from ${state.buildingName}. Move closer.`,'error');
+    }
+    btn.disabled=false;
+  },err=>{
+    dot.className='gps-dot fail';status.textContent='Location denied';
+    detail.textContent='Enable location access in your browser';btn.disabled=false;
+    alert2('Location access denied. Please enable it.','error');
+  },{timeout:12000,maximumAge:0});
+}
+
+function haversine(lat1,lon1,lat2,lon2){
+  const R=6371000,p1=lat1*Math.PI/180,p2=lat2*Math.PI/180;
+  const dp=(lat2-lat1)*Math.PI/180,dl=(lon2-lon1)*Math.PI/180;
+  const a=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+async function submit(action){
+  const name=document.getElementById('s-name').value.trim();
+  const dept=document.getElementById('s-dept').value;
+  const purpose=document.getElementById('s-purpose').value;
+  const staffid=document.getElementById('s-staffid').value;
+  const btns=document.querySelectorAll('#step5 .btn');
+  btns.forEach(b=>{b.disabled=true;b.textContent='Submitting...'});
+  const r=await fetch('/api/attendance/register',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({company_id:state.companyId,name,staff_id:staffid,department:dept,
+      purpose,action,latitude:state.lat,longitude:state.lng,selfie:state.selfie})});
+  const d=await r.json();
+  btns.forEach(b=>b.disabled=false);
+  if(action==='in'){document.querySelector('.btn.green').textContent='Sign IN';}
+  else{document.querySelector('.btn.danger').textContent='Sign OUT';}
+  if(d.error){return alert2(d.error,'error')}
+  toast(`Successfully signed ${action}! ✓`,'ok');
+  // Reset
+  setTimeout(()=>{
+    state={companyId:null,companyName:'',buildingName:'',buildingLat:null,buildingLng:null,maxDist:300,lat:null,lng:null,selfie:null,step:1};
+    document.getElementById('join-code').value='';document.getElementById('s-name').value='';
+    document.getElementById('s-staffid').value='';document.getElementById('s-dept').value='';
+    document.getElementById('s-purpose').value='';
+    document.getElementById('canvas').style.display='none';
+    document.getElementById('cam-overlay').style.display='flex';
+    document.getElementById('btn-start').style.display='flex';
+    document.getElementById('btn-snap').style.display='none';
+    document.getElementById('btn-retake').style.display='none';
+    goStep(1);
+  },2500);
+}
+</script>
+</body>
+  </html>
