@@ -307,7 +307,7 @@ Keep it concise, under 180 words, professional and insightful.
 Data:
 {summary}"""
     payload = json.dumps({
-        "model": "claude-sonnet-4-20250514",
+        "model": "claude-sonnet-4-6",
         "max_tokens": 400,
         "messages": [{"role": "user", "content": prompt}]
     }).encode()
