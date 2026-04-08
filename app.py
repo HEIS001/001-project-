@@ -285,6 +285,7 @@ def ai_insight():
     if "company_id" not in session:
         return jsonify({"error": "Unauthorized"}), 401
     import urllib.request
+    import urllib.error
     cid  = session["company_id"]
     date = datetime.now().strftime("%Y-%m-%d")
     with get_db() as conn:
@@ -293,47 +294,38 @@ def ai_insight():
             (cid, f"{date}%")).fetchall()
         total_staff = conn.execute("SELECT COUNT(*) FROM staff WHERE company_id=? AND active=1", (cid,)).fetchone()[0]
         company     = conn.execute("SELECT name FROM companies WHERE id=?", (cid,)).fetchone()
-    summary = f"Company: {company['name']}. Total registered staff: {total_staff}. Date: {date}. Records today: {len(records)}.\n"
+    summary = f"Company: {company['name']}. Total staff: {total_staff}. Date: {date}. Records: {len(records)}.\n"
     for r in records:
         summary += f"- {r['name']} ({r['department'] or 'N/A'}) signed {r['action']} at {r['timestamp']}\n"
-    prompt = f"""You are WorkSight AI, an intelligent workplace attendance analyst. Analyze the following attendance data and provide:
-1. A brief attendance summary
-2. Notable patterns or anomalies
-3. Productivity insight
-4. One actionable recommendation for management
-
-Keep it concise, under 180 words, professional and insightful.
-
-Data:
-{summary}"""
+    prompt = f"Analyse this attendance data and give a short professional insight under 150 words:\n{summary}"
     payload = json.dumps({
-        "model": "claude-sonnet-4-6",
-        "max_tokens": 400,
+        "model": "claude-opus-4-6",
+        "max_tokens": 300,
         "messages": [{"role": "user", "content": prompt}]
     }).encode()
-
     api_key = os.environ.get("ANTHROPIC_API_KEY", "")
     if not api_key:
-        return jsonify({"insight": "⚠ API key not set. Add ANTHROPIC_API_KEY=your-key to your .env file."})
-
-    req = urllib.request.Request(
-        "https://api.anthropic.com/v1/messages",
-        data=payload,
-        headers={
-            "Content-Type": "application/json",
-            "x-api-key": api_key,
-            "anthropic-version": "2023-06-01"
-        },
-        method="POST"
-    )
+        return jsonify({"insight": "API key not set in environment variables."})
     try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
+        req = urllib.request.Request(
+            "https://api.anthropic.com/v1/messages",
+            data=payload,
+            headers={
+                "Content-Type": "application/json",
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01"
+            },
+            method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=30) as resp:
             result = json.loads(resp.read())
             text = result["content"][0]["text"]
+        return jsonify({"insight": text})
+    except urllib.error.HTTPError as e:
+        body = e.read().decode()
+        return jsonify({"insight": f"API Error {e.code}: {body}"})
     except Exception as e:
-        text = f"AI insight temporarily unavailable. Please try again. ({str(e)[:60]})"
-    return jsonify({"insight": text})
-
+        return jsonify({"insight": f"Error: {str(e)}"})
 if __name__ == "__main__":
     init_db()
     print("\n✦ WorkSight is running → http://localhost:5000\n")
