@@ -346,4 +346,4 @@ Data:
 if __name__ == "__main__":
     init_db()
     print("\n✦ WorkSight is running → http://localhost:5000\n")
-    app.run(debug=True, host=0.0.0.0)
+    app.run(port=5000, host=0.0.0.0)
