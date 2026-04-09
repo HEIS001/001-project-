@@ -81,6 +81,7 @@ def init_db():
         );
         """)
 
+# ── Pages ─────────────────────────────────────────────────────────────────────
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -95,6 +96,7 @@ def admin():
         return redirect(url_for("index"))
     return render_template("admin.html")
 
+# ── Company register ──────────────────────────────────────────────────────────
 @app.route("/api/company/register", methods=["POST"])
 def company_register():
     d = request.json
@@ -119,6 +121,7 @@ def company_register():
     except sqlite3.IntegrityError:
         return jsonify({"error": "Email already registered."}), 409
 
+# ── Company login ─────────────────────────────────────────────────────────────
 @app.route("/api/company/login", methods=["POST"])
 def company_login():
     d = request.json
@@ -140,6 +143,7 @@ def company_logout():
     session.clear()
     return jsonify({"success": True})
 
+# ── Staff join via code ───────────────────────────────────────────────────────
 @app.route("/api/staff/join", methods=["POST"])
 def staff_join():
     d         = request.json
@@ -172,6 +176,7 @@ def staff_join():
         "building_name": company["building_name"] or "the building"
     })
 
+# ── Attendance register ───────────────────────────────────────────────────────
 @app.route("/api/attendance/register", methods=["POST"])
 def attendance_register():
     d          = request.json
@@ -220,6 +225,7 @@ def attendance_register():
              dept, purpose, action, ts, lat, lng, int(gps_ok), distance_m, selfie_path))
     return jsonify({"success": True, "message": f"{name} signed {action} successfully.", "timestamp": ts})
 
+# ── Admin dashboard data ──────────────────────────────────────────────────────
 @app.route("/api/admin/dashboard")
 def admin_dashboard():
     if "company_id" not in session:
@@ -280,6 +286,7 @@ def update_settings():
                      (d.get("building_name"), d.get("max_distance", 300), session["company_id"]))
     return jsonify({"success": True})
 
+# ── AI Insight (powered by Groq - free) ──────────────────────────────────────
 @app.route("/api/ai/insight", methods=["POST"])
 def ai_insight():
     if "company_id" not in session:
@@ -294,39 +301,49 @@ def ai_insight():
             (cid, f"{date}%")).fetchall()
         total_staff = conn.execute("SELECT COUNT(*) FROM staff WHERE company_id=? AND active=1", (cid,)).fetchone()[0]
         company     = conn.execute("SELECT name FROM companies WHERE id=?", (cid,)).fetchone()
-    summary = f"Company: {company['name']}. Total staff: {total_staff}. Date: {date}. Records: {len(records)}.\n"
+    summary = f"Company: {company['name']}. Total registered staff: {total_staff}. Date: {date}. Records today: {len(records)}.\n"
     for r in records:
         summary += f"- {r['name']} ({r['department'] or 'N/A'}) signed {r['action']} at {r['timestamp']}\n"
-    prompt = f"Analyse this attendance data and give a short professional insight under 150 words:\n{summary}"
-    payload = json.dumps({
-        "model": "claude-opus-4-6",
-        "max_tokens": 300,
-        "messages": [{"role": "user", "content": prompt}]
-    }).encode()
-    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    prompt = f"""You are WorkSight AI, an intelligent workplace attendance analyst. Analyze the following attendance data and provide:
+1. A brief attendance summary
+2. Notable patterns or anomalies
+3. Productivity insight
+4. One actionable recommendation for management
+
+Keep it concise, under 180 words, professional and insightful.
+
+Data:
+{summary}"""
+    api_key = os.environ.get("GROQ_API_KEY", "")
     if not api_key:
-        return jsonify({"insight": "API key not set in environment variables."})
+        return jsonify({"insight": "⚠ GROQ_API_KEY not set. Add it in Render Environment Variables."})
+    payload = json.dumps({
+        "model": "llama3-70b-8192",
+        "messages": [{"role": "user", "content": prompt}],
+        "max_tokens": 400,
+        "temperature": 0.7
+    }).encode()
+    req = urllib.request.Request(
+        "https://api.groq.com/openai/v1/chat/completions",
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}"
+        },
+        method="POST"
+    )
     try:
-        req = urllib.request.Request(
-            "https://api.anthropic.com/v1/messages",
-            data=payload,
-            headers={
-                "Content-Type": "application/json",
-                "x-api-key": api_key,
-                "anthropic-version": "2023-06-01"
-            },
-            method="POST"
-        )
         with urllib.request.urlopen(req, timeout=30) as resp:
             result = json.loads(resp.read())
-            text = result["content"][0]["text"]
-        return jsonify({"insight": text})
+            text = result["choices"][0]["message"]["content"]
     except urllib.error.HTTPError as e:
         body = e.read().decode()
-        return jsonify({"insight": f"API Error {e.code}: {body}"})
+        text = f"AI error: {body[:120]}"
     except Exception as e:
-        return jsonify({"insight": f"Error: {str(e)}"})
+        text = f"AI insight temporarily unavailable. ({str(e)[:80]})"
+    return jsonify({"insight": text})
+
 if __name__ == "__main__":
     init_db()
     print("\n✦ WorkSight is running → http://localhost:5000\n")
-    app.run(host="0.0.0.0", port=5000)
+    app.run(debug=True, port=5000)
