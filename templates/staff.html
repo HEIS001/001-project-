@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>WorkSight — Staff Portal</title>
+<link rel="icon" type="image/svg+xml" href="/static/icons/worksight-icon.svg"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<style>
+:root{--navy:#0A0F1E;--navy2:#0F172A;--navy3:#1E293B;--sky:#38BDF8;--sky2:#0EA5E9;--sky3:#BAE6FD;--gold:#F59E0B;--green:#10B981;--red:#EF4444;--white:#F8FAFC;--muted:#94A3B8;--border:rgba(56,189,248,0.15);--font:'Sora',sans-serif;--mono:'JetBrains Mono',monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--navy);color:var(--white);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(56,189,248,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,0.04) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;z-index:0}
+.orb{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0}
+.orb1{width:400px;height:400px;background:rgba(14,165,233,0.1);top:-80px;right:-80px}
+.orb2{width:350px;height:350px;background:rgba(16,185,129,0.07);bottom:0;left:-60px}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:64px;background:rgba(10,15,30,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo img{width:30px;height:30px}
+.nav-logo span{font-size:17px;font-weight:700;color:var(--white)}
+.nav-logo span em{color:var(--sky);font-style:normal}
+.nav-back{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;text-decoration:none;border:1px solid var(--border);color:var(--muted);font-family:var(--font);background:transparent;transition:all .2s}
+.nav-back:hover{border-color:var(--sky);color:var(--sky)}
+main{position:relative;z-index:1;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:5rem 1rem 2rem}
+.portal-wrap{width:100%;max-width:500px}
+.portal-header{text-align:center;margin-bottom:2rem}
+.portal-header h1{font-size:1.8rem;font-weight:700;letter-spacing:-.5px;margin-bottom:.4rem}
+.portal-header p{font-size:14px;color:var(--muted)}
+.card{background:rgba(15,23,42,0.9);border:1px solid var(--border);border-radius:20px;padding:2rem;backdrop-filter:blur(10px)}
+.steps-bar{display:flex;justify-content:space-between;margin-bottom:2rem;position:relative}
+.steps-bar::before{content:'';position:absolute;top:14px;left:14px;right:14px;height:1px;background:var(--border);z-index:0}
+.step-dot{display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;z-index:1}
+.dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);background:var(--navy2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--muted);transition:all .3s;font-family:var(--mono)}
+.dot.active{border-color:var(--sky);color:var(--sky);background:rgba(56,189,248,0.1)}
+.dot.done{border-color:var(--green);background:var(--green);color:#fff}
+.step-label{font-size:10px;color:var(--muted);font-weight:500;white-space:nowrap}
+.step-dot.active .step-label{color:var(--sky)}
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:6px;letter-spacing:.04em}
+.field input,.field select{width:100%;padding:11px 14px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;color:var(--white);font-size:14px;font-family:var(--font);outline:none;transition:border .2s}
+.field input:focus,.field select:focus{border-color:var(--sky)}
+.field input::placeholder{color:rgba(148,163,184,0.4)}
+.field select option{background:var(--navy2)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.gmail-hint{font-size:11px;color:var(--muted);margin-top:4px}
+.btn{width:100%;padding:13px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--font);border:none;transition:all .2s;margin-top:.5rem}
+.btn.primary{background:linear-gradient(135deg,var(--sky2),var(--sky));color:#fff}
+.btn.primary:hover{box-shadow:0 0 25px rgba(14,165,233,0.4)}
+.btn.primary:disabled{opacity:.5;cursor:not-allowed}
+.btn.ghost{background:transparent;border:1px solid var(--border);color:var(--muted)}
+.btn.ghost:hover{border-color:var(--sky);color:var(--sky)}
+.btn.green{background:linear-gradient(135deg,#059669,var(--green));color:#fff}
+.btn.danger{background:linear-gradient(135deg,#DC2626,var(--red));color:#fff}
+.alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:1rem;display:none}
+.alert.error{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#FCA5A5;display:block}
+.alert.success{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:#6EE7B7;display:block}
+.alert.warn{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:#FCD34D;display:block}
+
+/* Liveness camera */
+.cam-wrap{position:relative;width:100%;aspect-ratio:4/3;background:var(--navy3);border-radius:14px;overflow:hidden;margin-bottom:12px;border:2px solid var(--border)}
+.cam-wrap video,.cam-wrap canvas{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;border-radius:12px}
+.cam-overlay-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--muted);z-index:5}
+.face-guide{position:absolute;top:50%;left:50%;transform:translate(-50%,-55%);width:160px;height:200px;border:2px solid rgba(56,189,248,0.4);border-radius:50%;z-index:6;pointer-events:none}
+.face-guide.detected{border-color:var(--green);box-shadow:0 0 20px rgba(16,185,129,0.3)}
+.liveness-status{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.75);padding:10px;text-align:center;z-index:7}
+.liveness-title{font-size:13px;font-weight:600;color:var(--white);margin-bottom:4px}
+.liveness-sub{font-size:11px;color:var(--muted)}
+.challenge-bar{display:flex;gap:8px;justify-content:center;margin-top:8px}
+.challenge-pill{padding:4px 12px;border-radius:100px;font-size:11px;font-weight:600;border:1px solid var(--border);color:var(--muted);background:rgba(255,255,255,0.04);transition:all .3s}
+.challenge-pill.active{border-color:var(--gold);color:var(--gold);background:rgba(245,158,11,0.1);animation:pulse-gold 1s infinite}
+.challenge-pill.done{border-color:var(--green);color:var(--green);background:rgba(16,185,129,0.1)}
+@keyframes pulse-gold{50%{opacity:.6}}
+.progress-ring{position:absolute;top:8px;right:8px;z-index:7}
+.scan-line{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(56,189,248,0.6),transparent);animation:scan 2s linear infinite;z-index:6;display:none}
+@keyframes scan{from{top:10%}to{top:90%}}
+
+/* GPS */
+.gps-card{display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;margin-bottom:1rem}
+.gps-dot{width:10px;height:10px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:background .3s}
+.gps-dot.checking{background:var(--gold);animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.3}}
+.gps-dot.ok{background:var(--green)}
+.gps-dot.fail{background:var(--red)}
+.gps-info{flex:1}
+.gps-info strong{display:block;font-size:13px;color:var(--white)}
+.gps-info small{font-size:11px;color:var(--muted)}
+.gps-chk-btn{padding:6px 12px;background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.2);color:var(--sky);font-size:12px;border-radius:6px;cursor:pointer;font-family:var(--font)}
+.confirm-card{background:rgba(56,189,248,0.05);border:1px solid rgba(56,189,248,0.2);border-radius:14px;padding:1.25rem;margin-bottom:1rem}
+.confirm-row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+.confirm-row:last-child{border:none}
+.confirm-row span{color:var(--muted)}
+.confirm-row strong{color:var(--white);font-size:12px;text-align:right;max-width:60%;word-break:break-all}
+.verify-badges{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.vbadge{padding:4px 12px;border-radius:100px;font-size:11px;font-weight:600;font-family:var(--mono)}
+.vbadge.gps{background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#6EE7B7}
+.vbadge.cam{background:rgba(56,189,248,0.15);border:1px solid rgba(56,189,248,0.3);color:var(--sky3)}
+.vbadge.gmail{background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:#FCD34D}
+.btn-row{display:flex;gap:10px;margin-top:.5rem}
+.btn-row .btn{margin-top:0}
+.toast-wrap{position:fixed;top:80px;right:1rem;z-index:999;display:flex;flex-direction:column;gap:8px}
+.toast{padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;animation:fadeIn .3s ease;max-width:320px}
+.toast.ok{background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#6EE7B7}
+.toast.err{background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#FCA5A5}
+@keyframes fadeIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+.company-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.2);border-radius:100px;padding:4px 12px;font-size:12px;color:var(--sky);font-family:var(--mono);margin-bottom:1rem}
+.loading-models{text-align:center;padding:1.5rem;color:var(--muted);font-size:13px}
+.model-bar{width:100%;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;margin-top:10px;overflow:hidden}
+.model-fill{height:100%;background:var(--sky2);border-radius:2px;transition:width .5s;width:0%}
+</style>
+</head>
+<body>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<nav>
+  <a class="nav-logo" href="/"><img src="/static/icons/worksight-icon.svg" alt="WorkSight"/><span>Work<em>Sight</em></span></a>
+  <a href="/" class="nav-back">← Home</a>
+</nav>
+<main>
+<div class="portal-wrap">
+  <div class="portal-header">
+    <h1>Staff Sign-In Portal</h1>
+    <p>Gmail verified · Liveness checked · GPS confirmed</p>
+  </div>
+  <div class="card" id="main-card">
+    <div class="steps-bar">
+      <div class="step-dot active" id="sd1"><div class="dot active" id="dot1">1</div><span class="step-label">Company</span></div>
+      <div class="step-dot" id="sd2"><div class="dot" id="dot2">2</div><span class="step-label">Details</span></div>
+      <div class="step-dot" id="sd3"><div class="dot" id="dot3">3</div><span class="step-label">Liveness</span></div>
+      <div class="step-dot" id="sd4"><div class="dot" id="dot4">4</div><span class="step-label">Location</span></div>
+      <div class="step-dot" id="sd5"><div class="dot" id="dot5">5</div><span class="step-label">Confirm</span></div>
+    </div>
+    <div id="alert-box"></div>
+
+    <!-- Step 1: Join code + Gmail -->
+    <div id="step1">
+      <div class="field"><label>Company Join Code</label><input type="text" id="join-code" placeholder="e.g. AB12CD34" style="font-family:var(--mono);font-size:1.1rem;letter-spacing:4px;text-transform:uppercase"/></div>
+      <div class="field"><label>Your Full Name</label><input type="text" id="s-name" placeholder="e.g. Amara Okafor"/></div>
+      <div class="field">
+        <label>Your Gmail Address</label>
+        <input type="email" id="s-email" placeholder="yourname@gmail.com"/>
+        <div class="gmail-hint">Must be the Gmail you registered with. Each person has one unique Gmail.</div>
+      </div>
+      <button class="btn primary" onclick="doJoin()">Verify & Continue →</button>
+      <p style="text-align:center;font-size:12px;color:var(--muted);margin-top:1rem">Get your join code from your company admin</p>
+    </div>
+
+    <!-- Step 2: Staff details -->
+    <div id="step2" style="display:none">
+      <div class="company-tag" id="company-tag">🏢 Loading...</div>
+      <div class="field-row">
+        <div class="field"><label>Staff ID (optional)</label><input type="text" id="s-staffid" placeholder="STF-001"/></div>
+        <div class="field"><label>Department</label>
+          <select id="s-dept">
+            <option value="">Select department</option>
+            <option>Engineering</option><option>Finance</option><option>HR</option>
+            <option>Operations</option><option>Sales</option><option>Marketing</option>
+            <option>Security</option><option>Management</option><option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Purpose of visit</label><input type="text" id="s-purpose" placeholder="e.g. Work, Meeting, Training"/></div>
+      <button class="btn primary" onclick="goStep(3)">Next: Liveness Check →</button>
+      <button class="btn ghost" onclick="goStep(1)" style="margin-top:8px">← Back</button>
+    </div>
+
+    <!-- Step 3: Liveness detection -->
+    <div id="step3" style="display:none">
+      <div id="models-loading" class="loading-models">
+        <div>Loading face detection models...</div>
+        <div class="model-bar"><div class="model-fill" id="model-fill"></div></div>
+        <div style="font-size:11px;margin-top:6px;color:var(--muted)">This only happens once</div>
+      </div>
+      <div id="liveness-ui" style="display:none">
+        <p style="font-size:12px;color:var(--muted);margin-bottom:10px;text-align:center">Look at the camera and follow the instructions below</p>
+        <div class="cam-wrap" id="cam-wrap">
+          <video id="video" autoplay playsinline muted style="z-index:1"></video>
+          <canvas id="overlay-canvas" style="z-index:2"></canvas>
+          <div class="face-guide" id="face-guide"></div>
+          <div class="scan-line" id="scan-line"></div>
+          <div class="liveness-status">
+            <div class="liveness-title" id="live-title">Position your face in the oval</div>
+            <div class="liveness-sub" id="live-sub">Make sure your face is well lit</div>
+            <div class="challenge-bar">
+              <div class="challenge-pill active" id="pill-blink">👁 Blink 2x</div>
+              <div class="challenge-pill" id="pill-mouth">😮 Open mouth</div>
+              <div class="challenge-pill" id="pill-done">✓ Done</div>
+            </div>
+          </div>
+        </div>
+        <canvas id="canvas" style="display:none"></canvas>
+        <button class="btn ghost" id="btn-retake" onclick="resetLiveness()" style="display:none;margin-top:8px">Try Again</button>
+      </div>
+      <button class="btn ghost" onclick="stopCamAndGoBack()" style="margin-top:8px">← Back</button>
+    </div>
+
+    <!-- Step 4: GPS -->
+    <div id="step4" style="display:none">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:1rem">Your location must be within range of your company building.</p>
+      <div class="gps-card">
+        <div class="gps-dot" id="gps-dot"></div>
+        <div class="gps-info"><strong id="gps-status">Not checked yet</strong><small id="gps-detail">Tap button to verify</small></div>
+        <button class="gps-chk-btn" onclick="checkGPS()" id="gps-btn">Check GPS</button>
+      </div>
+      <button class="btn ghost" onclick="goStep(3)" style="margin-top:8px">← Back</button>
+    </div>
+
+    <!-- Step 5: Confirm -->
+    <div id="step5" style="display:none">
+      <div class="confirm-card">
+        <div class="confirm-row"><span>Name</span><strong id="cf-name">—</strong></div>
+        <div class="confirm-row"><span>Gmail</span><strong id="cf-email">—</strong></div>
+        <div class="confirm-row"><span>Department</span><strong id="cf-dept">—</strong></div>
+        <div class="confirm-row"><span>Company</span><strong id="cf-company">—</strong></div>
+        <div class="confirm-row"><span>Building</span><strong id="cf-building">—</strong></div>
+        <div class="verify-badges">
+          <span class="vbadge gmail">✓ Gmail Verified</span>
+          <span class="vbadge cam">✓ Liveness Passed</span>
+          <span class="vbadge gps">✓ GPS Verified</span>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn green" onclick="submit('in')">Sign IN</button>
+        <button class="btn danger" onclick="submit('out')">Sign OUT</button>
+      </div>
+      <button class="btn ghost" onclick="goStep(4)" style="margin-top:8px">← Back</button>
+    </div>
+  </div>
+</div>
+</main>
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.13/model';
+let state = {companyId:null,companyName:'',buildingName:'',buildingLat:null,buildingLng:null,maxDist:300,lat:null,lng:null,selfie:null,step:1,email:''};
+let camStream = null;
+let detectionInterval = null;
+let blinkCount = 0;
+let mouthDone = false;
+let livenessPhase = 'blink'; // 'blink' | 'mouth' | 'done'
+let lastEAR = 1;
+let eyesClosed = false;
+let modelsLoaded = false;
+
+function toast(msg, type='ok'){
+  const w=document.getElementById('toasts');
+  const t=document.createElement('div');
+  t.className='toast '+type;t.textContent=msg;
+  w.appendChild(t);setTimeout(()=>t.remove(),4000);
+}
+function alert2(msg, type){
+  const b=document.getElementById('alert-box');
+  if(!msg){b.innerHTML='';return}
+  b.innerHTML=`<div class="alert ${type}">${msg}</div>`;
+}
+function goStep(n){
+  alert2('');
+  for(let i=1;i<=5;i++){
+    document.getElementById('step'+i).style.display='none';
+    const dot=document.getElementById('dot'+i);
+    const sd=document.getElementById('sd'+i);
+    if(i<n){dot.className='dot done';dot.textContent='✓';sd.classList.add('active')}
+    else if(i===n){dot.className='dot active';dot.textContent=i;sd.classList.add('active')}
+    else{dot.className='dot';dot.textContent=i;sd.classList.remove('active')}
+  }
+  document.getElementById('step'+n).style.display='block';
+  state.step=n;
+  if(n===3) startLiveness();
+  if(n===5){
+    document.getElementById('cf-name').textContent=document.getElementById('s-name').value;
+    document.getElementById('cf-email').textContent=state.email;
+    document.getElementById('cf-dept').textContent=document.getElementById('s-dept').value||'—';
+    document.getElementById('cf-company').textContent=state.companyName;
+    document.getElementById('cf-building').textContent=state.buildingName;
+  }
+}
+
+async function doJoin(){
+  const code=document.getElementById('join-code').value.trim().toUpperCase();
+  const name=document.getElementById('s-name').value.trim();
+  const email=document.getElementById('s-email').value.trim().toLowerCase();
+  if(!code||!name){return alert2('Please enter your company code and name.','error')}
+  if(!email||!email.includes('@gmail.com')){return alert2('Please enter a valid Gmail address (@gmail.com).','error')}
+  const r=await fetch('/api/staff/join',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({join_code:code,name,email,department:'',staff_id:''})});
+  const d=await r.json();
+  if(d.error){return alert2(d.error,'error')}
+  state.companyId=d.company_id;state.companyName=d.company;
+  state.buildingLat=d.building_lat;state.buildingLng=d.building_lng;
+  state.maxDist=d.max_distance;state.buildingName=d.building_name;
+  state.email=email;
+  document.getElementById('company-tag').textContent='🏢 '+d.company;
+  goStep(2);toast('Company verified! ✓');
+}
+
+// ── LIVENESS DETECTION ──────────────────────────────────────────────────────
+async function loadModels(){
+  const fill=document.getElementById('model-fill');
+  fill.style.width='20%';
+  await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+  fill.style.width='60%';
+  await faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL);
+  fill.style.width='100%';
+  modelsLoaded=true;
+}
+
+async function startLiveness(){
+  document.getElementById('models-loading').style.display='block';
+  document.getElementById('liveness-ui').style.display='none';
+  if(!modelsLoaded){
+    try{await loadModels();}
+    catch(e){
+      document.getElementById('models-loading').innerHTML='<div style="color:#FCA5A5">Failed to load models. Check internet connection.</div>';
+      return;
+    }
+  }
+  document.getElementById('models-loading').style.display='none';
+  document.getElementById('liveness-ui').style.display='block';
+  resetLiveness();
+  try{
+    camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:640,height:480}});
+    const video=document.getElementById('video');
+    video.srcObject=camStream;
+    await video.play();
+    document.getElementById('scan-line').style.display='block';
+    startDetection();
+  }catch(e){
+    alert2('Camera access denied. Please allow camera permission.','error');
+  }
+}
+
+function resetLiveness(){
+  blinkCount=0;mouthDone=false;livenessPhase='blink';lastEAR=1;eyesClosed=false;
+  document.getElementById('pill-blink').className='challenge-pill active';
+  document.getElementById('pill-mouth').className='challenge-pill';
+  document.getElementById('pill-done').className='challenge-pill';
+  document.getElementById('live-title').textContent='Position your face in the oval';
+  document.getElementById('live-sub').textContent='Make sure you are well lit';
+  document.getElementById('face-guide').className='face-guide';
+  document.getElementById('btn-retake').style.display='none';
+  document.getElementById('canvas').style.display='none';
+  document.getElementById('video').style.display='block';
+}
+
+function stopDetection(){if(detectionInterval){clearInterval(detectionInterval);detectionInterval=null;}}
+
+function euclidean(p1,p2){return Math.sqrt((p1.x-p2.x)**2+(p1.y-p2.y)**2);}
+
+function getEAR(eye){
+  const a=euclidean(eye[1],eye[5]);
+  const b=euclidean(eye[2],eye[4]);
+  const c=euclidean(eye[0],eye[3]);
+  return(a+b)/(2*c);
+}
+
+function getMAR(mouth){
+  const a=euclidean(mouth[13],mouth[19]);
+  const b=euclidean(mouth[14],mouth[18]);
+  const c=euclidean(mouth[15],mouth[17]);
+  const d=euclidean(mouth[12],mouth[16]);
+  return(a+b+c)/(2*d);
+}
+
+function startDetection(){
+  stopDetection();
+  const video=document.getElementById('video');
+  const overlayCanvas=document.getElementById('overlay-canvas');
+  detectionInterval=setInterval(async()=>{
+    if(!video.videoWidth)return;
+    overlayCanvas.width=video.videoWidth;
+    overlayCanvas.height=video.videoHeight;
+    const options=new faceapi.TinyFaceDetectorOptions({inputSize:224,scoreThreshold:0.5});
+    const result=await faceapi.detectSingleFace(video,options).withFaceLandmarks(true);
+    const ctx=overlayCanvas.getContext('2d');
+    ctx.clearRect(0,0,overlayCanvas.width,overlayCanvas.height);
+    if(!result){
+      document.getElementById('face-guide').className='face-guide';
+      document.getElementById('live-title').textContent='No face detected — look at camera';
+      document.getElementById('live-sub').textContent='Make sure your face is in the oval';
+      return;
+    }
+    document.getElementById('face-guide').className='face-guide detected';
+    const lm=result.landmarks;
+    const leftEye=lm.getLeftEye();
+    const rightEye=lm.getRightEye();
+    const mouth=lm.getMouth();
+    const ear=(getEAR(leftEye)+getEAR(rightEye))/2;
+    const mar=getMAR(mouth);
+
+    if(livenessPhase==='blink'){
+      document.getElementById('live-title').textContent=`Blink your eyes — ${blinkCount}/2 done`;
+      document.getElementById('live-sub').textContent='Blink slowly and naturally';
+      if(ear<0.22&&!eyesClosed){eyesClosed=true;}
+      else if(ear>0.28&&eyesClosed){
+        eyesClosed=false;blinkCount++;
+        if(blinkCount>=2){
+          livenessPhase='mouth';
+          document.getElementById('pill-blink').className='challenge-pill done';
+          document.getElementById('pill-mouth').className='challenge-pill active';
+          toast('2 blinks detected! Now open your mouth ✓');
+        }
+      }
+    } else if(livenessPhase==='mouth'){
+      document.getElementById('live-title').textContent='Open your mouth wide';
+      document.getElementById('live-sub').textContent='Hold it open for a moment';
+      if(mar>0.5){
+        mouthDone=true;livenessPhase='done';
+        document.getElementById('pill-mouth').className='challenge-pill done';
+        document.getElementById('pill-done').className='challenge-pill done';
+        document.getElementById('live-title').textContent='Liveness confirmed! ✓';
+        document.getElementById('live-sub').textContent='Taking your photo now...';
+        toast('Liveness verified! ✓');
+        setTimeout(()=>capturePhoto(),800);
+      }
+    }
+    lastEAR=ear;
+  },150);
+}
+
+function capturePhoto(){
+  stopDetection();
+  const video=document.getElementById('video');
+  const canvas=document.getElementById('canvas');
+  canvas.width=video.videoWidth||320;
+  canvas.height=video.videoHeight||240;
+  canvas.getContext('2d').drawImage(video,0,0);
+  state.selfie=canvas.toDataURL('image/jpeg',0.8);
+  video.style.display='none';
+  canvas.style.display='block';
+  document.getElementById('btn-retake').style.display='block';
+  document.getElementById('scan-line').style.display='none';
+  if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}
+  setTimeout(()=>goStep(4),1000);
+}
+
+function stopCamAndGoBack(){
+  stopDetection();
+  if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}
+  goStep(2);
+}
+
+// ── GPS ─────────────────────────────────────────────────────────────────────
+function haversine(lat1,lon1,lat2,lon2){
+  const R=6371000,p1=lat1*Math.PI/180,p2=lat2*Math.PI/180;
+  const dp=(lat2-lat1)*Math.PI/180,dl=(lon2-lon1)*Math.PI/180;
+  const a=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+function checkGPS(){
+  const dot=document.getElementById('gps-dot');
+  const status=document.getElementById('gps-status');
+  const detail=document.getElementById('gps-detail');
+  const btn=document.getElementById('gps-btn');
+  dot.className='gps-dot checking';status.textContent='Checking...';btn.disabled=true;
+  navigator.geolocation.getCurrentPosition(pos=>{
+    state.lat=pos.coords.latitude;state.lng=pos.coords.longitude;
+    const dist=haversine(state.lat,state.lng,state.buildingLat,state.buildingLng);
+    if(dist<=state.maxDist){
+      dot.className='gps-dot ok';status.textContent='Location verified ✓';
+      detail.textContent=`${Math.round(dist)}m from ${state.buildingName}`;
+      toast('Location verified!');setTimeout(()=>goStep(5),800);
+    } else {
+      dot.className='gps-dot fail';status.textContent='Too far from building';
+      detail.textContent=`${Math.round(dist)}m away. Must be within ${state.maxDist}m.`;
+      alert2(`You are ${Math.round(dist)}m from ${state.buildingName}. Move closer.`,'error');
+    }
+    btn.disabled=false;
+  },err=>{
+    dot.className='gps-dot fail';status.textContent='Location denied';
+    detail.textContent='Enable location in your browser settings';btn.disabled=false;
+    alert2('Location access denied.','error');
+  },{timeout:12000,maximumAge:0});
+}
+
+async function submit(action){
+  const name=document.getElementById('s-name').value.trim();
+  const dept=document.getElementById('s-dept').value;
+  const purpose=document.getElementById('s-purpose').value;
+  const staffid=document.getElementById('s-staffid').value;
+  const btns=document.querySelectorAll('#step5 .btn');
+  btns.forEach(b=>{b.disabled=true;});
+  const r=await fetch('/api/attendance/register',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({company_id:state.companyId,name,staff_id:staffid,department:dept,
+      purpose,action,latitude:state.lat,longitude:state.lng,selfie:state.selfie,email:state.email})});
+  const d=await r.json();
+  btns.forEach(b=>b.disabled=false);
+  if(d.error){return alert2(d.error,'error')}
+  toast(`Successfully signed ${action}! ✓`,'ok');
+  setTimeout(()=>{
+    state={companyId:null,companyName:'',buildingName:'',buildingLat:null,buildingLng:null,maxDist:300,lat:null,lng:null,selfie:null,step:1,email:''};
+    document.getElementById('join-code').value='';
+    document.getElementById('s-name').value='';
+    document.getElementById('s-email').value='';
+    document.getElementById('s-staffid').value='';
+    document.getElementById('s-dept').value='';
+    document.getElementById('s-purpose').value='';
+    resetLiveness();
+    goStep(1);
+  },2500);
+}
+</script>
+</body>
+</html>
