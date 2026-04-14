@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>WorkSight — Intelligent Attendance</title>
+<link rel="icon" type="image/svg+xml" href="/static/icons/worksight-icon.svg"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --navy: #0A0F1E;
+  --navy2: #0F172A;
+  --navy3: #1E293B;
+  --sky: #38BDF8;
+  --sky2: #0EA5E9;
+  --sky3: #BAE6FD;
+  --gold: #F59E0B;
+  --green: #10B981;
+  --red: #EF4444;
+  --white: #F8FAFC;
+  --muted: #94A3B8;
+  --border: rgba(56,189,248,0.15);
+  --card: rgba(15,23,42,0.8);
+  --font: 'Sora', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--navy);color:var(--white);min-height:100vh;overflow-x:hidden}
+
+/* Grid background */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(56,189,248,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,0.04) 1px,transparent 1px);
+  background-size:60px 60px;pointer-events:none;z-index:0;
+}
+
+/* Glow orbs */
+.orb{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0}
+.orb1{width:500px;height:500px;background:rgba(14,165,233,0.12);top:-100px;right:-100px}
+.orb2{width:400px;height:400px;background:rgba(245,158,11,0.06);bottom:-50px;left:-80px}
+
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 2rem;height:64px;
+  background:rgba(10,15,30,0.8);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo img{width:32px;height:32px}
+.nav-logo span{font-size:18px;font-weight:700;color:var(--white);letter-spacing:-0.5px}
+.nav-logo span em{color:var(--sky);font-style:normal}
+.nav-links{display:flex;gap:8px;align-items:center}
+.nav-btn{padding:8px 18px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;text-decoration:none;font-family:var(--font);transition:all .2s}
+.nav-btn.ghost{background:transparent;border:1px solid var(--border);color:var(--muted)}
+.nav-btn.ghost:hover{border-color:var(--sky);color:var(--sky)}
+.nav-btn.solid{background:var(--sky2);border:none;color:#fff}
+.nav-btn.solid:hover{background:var(--sky)}
+
+main{position:relative;z-index:1}
+
+/* Hero */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:6rem 1.5rem 3rem}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.25);border-radius:100px;padding:6px 16px;font-size:12px;font-weight:500;color:var(--sky);letter-spacing:0.05em;margin-bottom:2rem;font-family:var(--mono)}
+.hero-eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--sky);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+.hero h1{font-size:clamp(2.5rem,7vw,5rem);font-weight:700;line-height:1.05;letter-spacing:-2px;margin-bottom:1.5rem;max-width:900px}
+.hero h1 .line1{display:block;color:var(--white)}
+.hero h1 .line2{display:block;background:linear-gradient(135deg,var(--sky),var(--sky3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{font-size:1.1rem;color:var(--muted);max-width:560px;line-height:1.7;margin-bottom:3rem}
+.hero-cta{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.btn-xl{padding:14px 32px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--font);text-decoration:none;transition:all .25s;border:none;display:inline-flex;align-items:center;gap:8px}
+.btn-xl.primary{background:linear-gradient(135deg,var(--sky2),var(--sky));color:#fff;box-shadow:0 0 30px rgba(14,165,233,0.3)}
+.btn-xl.primary:hover{box-shadow:0 0 50px rgba(14,165,233,0.5);transform:translateY(-2px)}
+.btn-xl.outline{background:transparent;border:1px solid var(--border);color:var(--white)}
+.btn-xl.outline:hover{border-color:var(--sky);color:var(--sky);background:rgba(56,189,248,0.05)}
+.hero-stats{display:flex;gap:3rem;justify-content:center;margin-top:4rem;padding-top:3rem;border-top:1px solid var(--border)}
+.stat-item{text-align:center}
+.stat-item strong{display:block;font-size:2rem;font-weight:700;color:var(--sky)}
+.stat-item span{font-size:12px;color:var(--muted);letter-spacing:0.05em}
+
+/* Features */
+.features{padding:6rem 1.5rem;max-width:1200px;margin:0 auto}
+.section-label{font-family:var(--mono);font-size:12px;color:var(--sky);letter-spacing:0.1em;margin-bottom:1rem}
+.section-title{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:700;letter-spacing:-1px;margin-bottom:1rem}
+.section-sub{color:var(--muted);font-size:1rem;line-height:1.7;max-width:500px}
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5px;margin-top:4rem;background:var(--border);border-radius:20px;overflow:hidden}
+.feat-card{background:var(--navy2);padding:2rem;transition:background .2s}
+.feat-card:hover{background:var(--navy3)}
+.feat-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:1.25rem;font-size:20px}
+.feat-card h3{font-size:17px;font-weight:600;margin-bottom:.5rem}
+.feat-card p{font-size:13px;color:var(--muted);line-height:1.7}
+
+/* Modals */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:200;align-items:center;justify-content:center;padding:1rem}
+.overlay.open{display:flex}
+.modal{background:var(--navy2);border:1px solid var(--border);border-radius:20px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;padding:2rem;position:relative;animation:slideUp .3s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.modal-close{position:absolute;top:1rem;right:1rem;background:var(--navy3);border:none;color:var(--muted);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{color:var(--white)}
+.modal h2{font-size:1.4rem;font-weight:700;margin-bottom:.25rem;letter-spacing:-0.5px}
+.modal p.sub{font-size:13px;color:var(--muted);margin-bottom:1.75rem}
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:6px;letter-spacing:.04em}
+.field input,.field select{width:100%;padding:11px 14px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;color:var(--white);font-size:14px;font-family:var(--font);transition:border .2s;outline:none}
+.field input:focus,.field select:focus{border-color:var(--sky)}
+.field input::placeholder{color:rgba(148,163,184,0.5)}
+.field select option{background:var(--navy2)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn-form{width:100%;padding:13px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--font);border:none;margin-top:.5rem;transition:all .2s}
+.btn-form.primary{background:linear-gradient(135deg,var(--sky2),var(--sky));color:#fff}
+.btn-form.primary:hover{box-shadow:0 0 25px rgba(14,165,233,0.4)}
+.btn-form.primary:disabled{opacity:.5;cursor:not-allowed}
+.divider{text-align:center;font-size:12px;color:var(--muted);margin:1rem 0;position:relative}
+.divider::before,.divider::after{content:'';position:absolute;top:50%;width:42%;height:1px;background:var(--border)}
+.divider::before{left:0}.divider::after{right:0}
+.link-btn{background:none;border:none;color:var(--sky);font-size:13px;cursor:pointer;font-family:var(--font);padding:0}
+.link-btn:hover{text-decoration:underline}
+.alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:1rem;display:none}
+.alert.error{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#FCA5A5}
+.alert.success{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:#6EE7B7}
+.alert.show{display:block}
+
+/* GPS status */
+.gps-status{display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;margin-bottom:1rem;font-size:13px}
+.gps-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:background .3s}
+.gps-dot.checking{background:var(--gold);animation:pulse 1s infinite}
+.gps-dot.ok{background:var(--green)}
+.gps-dot.fail{background:var(--red)}
+.gps-text{color:var(--muted)}
+.gps-btn{margin-left:auto;padding:5px 12px;background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.3);border-radius:6px;color:var(--sky);font-size:12px;cursor:pointer;font-family:var(--font)}
+
+/* Code display */
+.code-box{background:var(--navy);border:1px solid rgba(56,189,248,0.3);border-radius:12px;padding:1.25rem;text-align:center;margin:1rem 0}
+.code-box .code{font-family:var(--mono);font-size:2rem;font-weight:700;color:var(--sky);letter-spacing:6px}
+.code-box .hint{font-size:12px;color:var(--muted);margin-top:.5rem}
+
+/* Footer */
+footer{border-top:1px solid var(--border);padding:2rem 1.5rem;text-align:center;color:var(--muted);font-size:13px;position:relative;z-index:1}
+footer span{color:var(--sky)}
+
+/* Tab switcher */
+.tabs{display:flex;gap:4px;background:rgba(255,255,255,0.04);border-radius:10px;padding:4px;margin-bottom:1.5rem}
+.tab{flex:1;padding:8px;border:none;background:transparent;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;border-radius:7px;font-family:var(--font);transition:all .2s}
+.tab.active{background:var(--sky2);color:#fff}
+</style>
+</head>
+<body>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<nav>
+  <a class="nav-logo" href="/">
+    <img src="/static/icons/worksight-icon.svg" alt="WorkSight"/>
+    <span>Work<em>Sight</em></span>
+  </a>
+  <div class="nav-links">
+    <a href="/staff" class="nav-btn ghost">Staff Portal</a>
+    <button class="nav-btn ghost" onclick="openModal('login-modal')">Login</button>
+    <button class="nav-btn solid" onclick="openModal('register-modal')">Register Company</button>
+  </div>
+</nav>
+
+<main>
+<section class="hero">
+  <div class="hero-eyebrow">AI-Powered Attendance Intelligence</div>
+  <h1>
+    <span class="line1">Know Who's In Your</span>
+    <span class="line2">Building. Always.</span>
+  </h1>
+  <p class="hero-sub">WorkSight combines GPS verification, selfie capture, and AI analytics to give you complete visibility over your workforce — in real time.</p>
+  <div class="hero-cta">
+    <button class="btn-xl primary" onclick="openModal('register-modal')">
+      Register Your Company
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+    <a href="/staff" class="btn-xl outline">Staff Sign-In Portal</a>
+  </div>
+  <div class="hero-stats">
+    <div class="stat-item"><strong>GPS</strong><span>LOCATION LOCK</span></div>
+    <div class="stat-item"><strong>AI</strong><span>INSIGHTS</span></div>
+    <div class="stat-item"><strong>100%</strong><span>VERIFIED</span></div>
+  </div>
+</section>
+
+<section class="features">
+  <p class="section-label">// CAPABILITIES</p>
+  <h2 class="section-title">Built to prevent fraud.<br>Designed for clarity.</h2>
+  <p class="section-sub">Every sign-in requires physical presence — no proxies, no buddy punching.</p>
+  <div class="features-grid">
+    <div class="feat-card">
+      <div class="feat-icon" style="background:rgba(56,189,248,0.1)">📍</div>
+      <h3>GPS Building Lock</h3>
+      <p>Staff can only sign in when physically within your registered building radius. Set at company registration time.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon" style="background:rgba(16,185,129,0.1)">📸</div>
+      <h3>Selfie Verification</h3>
+      <p>Live photo captured at every sign-in and sign-out. Admin can review all photos in the dashboard.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon" style="background:rgba(245,158,11,0.1)">🔑</div>
+      <h3>Unique Company Codes</h3>
+      <p>Each company gets a private join code. Only staff with the code can register and sign in to your building.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon" style="background:rgba(139,92,246,0.1)">🤖</div>
+      <h3>AI Attendance Insights</h3>
+      <p>Claude AI analyses your attendance data daily and surfaces patterns, anomalies, and productivity recommendations.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon" style="background:rgba(239,68,68,0.1)">📊</div>
+      <h3>Live Admin Dashboard</h3>
+      <p>Real-time view of who's in, weekly charts, department breakdowns, and complete attendance logs.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon" style="background:rgba(56,189,248,0.1)">🏢</div>
+      <h3>Multi-Company Ready</h3>
+      <p>Each company is fully isolated. Register multiple buildings or departments with separate codes.</p>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <p>© 2025 <span>WorkSight</span> — Intelligent Attendance Platform</p>
+</footer>
+
+<!-- LOGIN MODAL -->
+<div class="overlay" id="login-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('login-modal')">✕</button>
+    <h2>Welcome back</h2>
+    <p class="sub">Sign in to your company dashboard</p>
+    <div class="alert" id="login-alert"></div>
+    <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="owner@company.com"/></div>
+    <div class="field"><label>Password</label><input type="password" id="login-pw" placeholder="••••••••"/></div>
+    <button class="btn-form primary" onclick="doLogin()">Sign In to Dashboard</button>
+    <div class="divider">or</div>
+    <p style="text-align:center;font-size:13px;color:var(--muted)">No account? <button class="link-btn" onclick="switchModal('login-modal','register-modal')">Register your company</button></p>
+  </div>
+</div>
+
+<!-- REGISTER MODAL -->
+<div class="overlay" id="register-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('register-modal')">✕</button>
+    <h2>Register your company</h2>
+    <p class="sub">You must be at your building to capture its location</p>
+    <div class="alert" id="reg-alert"></div>
+    <div class="tabs">
+      <button class="tab active" onclick="regTab(1,this)">1. Company Info</button>
+      <button class="tab" onclick="regTab(2,this)">2. Building Location</button>
+    </div>
+    <div id="reg-step1">
+      <div class="field-row">
+        <div class="field"><label>Company Name</label><input type="text" id="reg-company" placeholder="Acme Ltd"/></div>
+        <div class="field"><label>Your Name</label><input type="text" id="reg-owner" placeholder="John Doe"/></div>
+      </div>
+      <div class="field"><label>Email</label><input type="email" id="reg-email" placeholder="you@company.com"/></div>
+      <div class="field"><label>Password</label><input type="password" id="reg-pw" placeholder="Min 8 characters"/></div>
+      <button class="btn-form primary" onclick="regTab(2,document.querySelectorAll('.tab')[1])">Next: Capture Building →</button>
+    </div>
+    <div id="reg-step2" style="display:none">
+      <div class="field"><label>Building Name</label><input type="text" id="reg-bname" placeholder="e.g. HQ Tower, Block A"/></div>
+      <div class="gps-status">
+        <div class="gps-dot" id="reg-gps-dot"></div>
+        <span class="gps-text" id="reg-gps-text">Not captured yet — you must be at your building</span>
+        <button class="gps-btn" onclick="captureBuilding()">Capture Location</button>
+      </div>
+      <p style="font-size:11px;color:var(--muted);margin-bottom:1rem">⚠ This location will be used to verify all staff sign-ins. Only proceed when you are physically inside your building.</p>
+      <button class="btn-form primary" id="reg-submit-btn" onclick="doRegister()" disabled>Register Company</button>
+      <button class="btn-form" style="background:transparent;border:1px solid var(--border);color:var(--muted);margin-top:8px" onclick="regTab(1,document.querySelectorAll('.tab')[0])">← Back</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS MODAL -->
+<div class="overlay" id="success-modal">
+  <div class="modal" style="text-align:center">
+    <div style="font-size:3rem;margin-bottom:1rem">🎉</div>
+    <h2>Company Registered!</h2>
+    <p class="sub">Share this code with your staff so they can join</p>
+    <div class="code-box">
+      <div class="code" id="success-code">--------</div>
+      <div class="hint">Staff Join Code — keep this safe</div>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:1.5rem">Staff go to <strong style="color:var(--sky)">/staff</strong> and enter this code to register and sign in.</p>
+    <button class="btn-form primary" onclick="goAdmin()">Open My Dashboard →</button>
+  </div>
+</div>
+
+<script>
+let buildingLat=null,buildingLng=null;
+
+function openModal(id){document.getElementById(id).classList.add('open')}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+function switchModal(from,to){closeModal(from);openModal(to)}
+
+function showAlert(id,msg,type){
+  const el=document.getElementById(id);
+  el.textContent=msg;el.className='alert '+type+' show';
+}
+
+function regTab(n,btn){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i+1===n));
+  document.getElementById('reg-step1').style.display=n===1?'block':'none';
+  document.getElementById('reg-step2').style.display=n===2?'block':'none';
+}
+
+function captureBuilding(){
+  const dot=document.getElementById('reg-gps-dot');
+  const txt=document.getElementById('reg-gps-text');
+  dot.className='gps-dot checking';txt.textContent='Capturing location...';
+  navigator.geolocation.getCurrentPosition(pos=>{
+    buildingLat=pos.coords.latitude;buildingLng=pos.coords.longitude;
+    dot.className='gps-dot ok';
+    txt.textContent=`Captured: ${buildingLat.toFixed(5)}, ${buildingLng.toFixed(5)}`;
+    document.getElementById('reg-submit-btn').disabled=false;
+  },err=>{
+    dot.className='gps-dot fail';txt.textContent='Failed — enable location access';
+  },{timeout:10000,maximumAge:0});
+}
+
+async function doRegister(){
+  const company=document.getElementById('reg-company').value.trim();
+  const owner=document.getElementById('reg-owner').value.trim();
+  const email=document.getElementById('reg-email').value.trim();
+  const pw=document.getElementById('reg-pw').value;
+  const bname=document.getElementById('reg-bname').value.trim();
+  if(!company||!owner||!email||!pw){return showAlert('reg-alert','Please fill in all company info.','error')}
+  if(!buildingLat){return showAlert('reg-alert','Please capture your building location.','error')}
+  const btn=document.getElementById('reg-submit-btn');
+  btn.disabled=true;btn.textContent='Registering...';
+  const r=await fetch('/api/company/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({company_name:company,owner_name:owner,email,password:pw,building_name:bname,latitude:buildingLat,longitude:buildingLng})});
+  const d=await r.json();
+  btn.disabled=false;btn.textContent='Register Company';
+  if(d.error){return showAlert('reg-alert',d.error,'error')}
+  document.getElementById('success-code').textContent=d.join_code;
+  closeModal('register-modal');openModal('success-modal');
+}
+
+async function doLogin(){
+  const email=document.getElementById('login-email').value.trim();
+  const pw=document.getElementById('login-pw').value;
+  if(!email||!pw){return showAlert('login-alert','Enter email and password.','error')}
+  const r=await fetch('/api/company/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pw})});
+  const d=await r.json();
+  if(d.error){return showAlert('login-alert',d.error,'error')}
+  window.location.href='/admin';
+}
+
+function goAdmin(){closeModal('success-modal');window.location.href='/admin'}
+
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')}));
+</script>
+</body>
+</html>
