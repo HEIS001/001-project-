@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>WorkSight — My Attendance History</title>
+<link rel="icon" type="image/svg+xml" href="/static/icons/worksight-icon.svg"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{--navy:#0A0F1E;--navy2:#0F172A;--navy3:#1E293B;--sky:#38BDF8;--sky2:#0EA5E9;--gold:#F59E0B;--green:#10B981;--red:#EF4444;--white:#F8FAFC;--muted:#94A3B8;--border:rgba(56,189,248,0.15);--font:'Sora',sans-serif;--mono:'JetBrains Mono',monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--navy);color:var(--white);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(56,189,248,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,0.04) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;z-index:0}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:64px;background:rgba(10,15,30,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo img{width:30px;height:30px}
+.nav-logo span{font-size:17px;font-weight:700}
+.nav-logo span em{color:var(--sky);font-style:normal}
+.nav-back{padding:8px 16px;border-radius:8px;font-size:13px;text-decoration:none;border:1px solid var(--border);color:var(--muted);font-family:var(--font)}
+main{position:relative;z-index:1;padding:5rem 1rem 2rem;max-width:600px;margin:0 auto}
+.card{background:rgba(15,23,42,0.9);border:1px solid var(--border);border-radius:20px;padding:2rem;margin-bottom:1.5rem}
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:6px}
+.field input{width:100%;padding:11px 14px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;color:var(--white);font-size:14px;font-family:var(--font);outline:none}
+.field input:focus{border-color:var(--sky)}
+.btn{width:100%;padding:13px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;font-family:var(--font);border:none;background:linear-gradient(135deg,var(--sky2),var(--sky));color:#fff;margin-top:.5rem}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1.5rem}
+.stat{background:rgba(15,23,42,0.8);border:1px solid var(--border);border-radius:12px;padding:1rem;text-align:center}
+.stat .val{font-size:1.8rem;font-weight:700}
+.stat .lbl{font-size:11px;color:var(--muted);margin-top:4px}
+.stat.sky .val{color:var(--sky)}
+.stat.gold .val{color:var(--gold)}
+.stat.green .val{color:var(--green)}
+.score-bar{width:100%;height:8px;background:rgba(255,255,255,0.06);border-radius:4px;margin-top:8px;overflow:hidden}
+.score-fill{height:100%;border-radius:4px}
+.record-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px}
+.record-row:last-child{border:none}
+.badge{padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600;font-family:var(--mono)}
+.badge.in{background:rgba(16,185,129,0.15);color:#6EE7B7}
+.badge.out{background:rgba(239,68,68,0.15);color:#FCA5A5}
+.late-tag{font-size:10px;color:var(--gold);font-family:var(--mono);margin-left:4px}
+.alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:1rem;display:none}
+.alert.error{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#FCA5A5;display:block}
+</style>
+</head>
+<body>
+<nav>
+  <a class="nav-logo" href="/"><img src="/static/icons/worksight-icon.svg" alt=""/><span>Work<em>Sight</em></span></a>
+  <a href="/staff" class="nav-back">← Sign In Portal</a>
+</nav>
+<main>
+  <div style="text-align:center;margin-bottom:2rem">
+    <h1 style="font-size:1.8rem;font-weight:700;letter-spacing:-.5px">My Attendance History</h1>
+    <p style="font-size:14px;color:var(--muted)">View your personal attendance records and punctuality score</p>
+  </div>
+
+  <div class="card" id="login-card">
+    <div id="alert-box"></div>
+    <div class="field"><label>Company Join Code</label><input type="text" id="code" placeholder="e.g. AB12CD34" style="font-family:var(--mono);letter-spacing:4px;text-transform:uppercase"/></div>
+    <div class="field"><label>Your Gmail Address</label><input type="email" id="email" placeholder="yourname@gmail.com"/></div>
+    <button class="btn" onclick="loadHistory()">View My History</button>
+  </div>
+
+  <div id="history-section" style="display:none">
+    <div style="background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.2);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:12px">
+      <div style="width:44px;height:44px;border-radius:50%;background:rgba(56,189,248,0.15);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--sky)" id="hist-avatar">?</div>
+      <div>
+        <div style="font-weight:600" id="hist-name">—</div>
+        <div style="font-size:12px;color:var(--muted)" id="hist-company">—</div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat sky"><div class="val" id="h-total">—</div><div class="lbl">Total Days In</div></div>
+      <div class="stat gold"><div class="val" id="h-late">—</div><div class="lbl">Late Arrivals</div></div>
+      <div class="stat green">
+        <div class="val" id="h-score">—</div>
+        <div class="lbl">Punctuality %</div>
+        <div class="score-bar"><div class="score-fill" id="score-fill"></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size:14px;font-weight:600;margin-bottom:1rem">Recent Records</h3>
+      <div id="hist-records"></div>
+    </div>
+
+    <div style="text-align:center;margin-top:1rem">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Want to request leave?</div>
+      <button onclick="showLeaveForm()" style="padding:10px 24px;background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:#C4B5FD;border-radius:10px;font-size:13px;cursor:pointer;font-family:var(--font)">Request Leave</button>
+    </div>
+
+    <div id="leave-form" style="display:none;margin-top:1rem" class="card">
+      <h3 style="font-size:14px;font-weight:600;margin-bottom:1rem">Leave Request</h3>
+      <div class="field"><label>Leave Date</label><input type="date" id="leave-date"/></div>
+      <div class="field"><label>Reason</label><input type="text" id="leave-reason" placeholder="e.g. Medical appointment, Family emergency"/></div>
+      <button class="btn" onclick="submitLeave()" style="background:linear-gradient(135deg,#7C3AED,#8B5CF6)">Submit Request</button>
+    </div>
+  </div>
+</main>
+
+<script>
+let userCode='', userEmail='';
+
+async function loadHistory(){
+  const code=document.getElementById('code').value.trim().toUpperCase();
+  const email=document.getElementById('email').value.trim().toLowerCase();
+  if(!code||!email){showAlert('Please enter your code and Gmail.');return}
+  const r=await fetch(`/api/staff/history?code=${code}&email=${encodeURIComponent(email)}`);
+  const d=await r.json();
+  if(d.error){showAlert(d.error);return}
+  userCode=code;userEmail=email;
+  document.getElementById('login-card').style.display='none';
+  document.getElementById('history-section').style.display='block';
+  const init=(d.staff.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('hist-avatar').textContent=init;
+  document.getElementById('hist-name').textContent=d.staff.name;
+  document.getElementById('hist-company').textContent=d.company+' · '+d.staff.department;
+  document.getElementById('h-total').textContent=d.total_in;
+  document.getElementById('h-late').textContent=d.total_late;
+  document.getElementById('h-score').textContent=d.punctuality_score+'%';
+  const color=d.punctuality_score>=90?'var(--green)':d.punctuality_score>=70?'var(--gold)':'var(--red)';
+  document.getElementById('score-fill').style.cssText=`width:${d.punctuality_score}%;background:${color}`;
+  const records=d.records;
+  const el=document.getElementById('hist-records');
+  if(!records.length){el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:13px;padding:2rem">No records found.</div>';return}
+  el.innerHTML=records.map(r=>{
+    const t=r.timestamp?.split(' ')[1]?.slice(0,5)||'—';
+    const date=r.timestamp?.split(' ')[0]||'—';
+    const late=r.is_late?'<span class="late-tag">LATE</span>':'';
+    return`<div class="record-row"><div><div style="font-weight:500">${date}</div><div style="font-size:11px;color:var(--muted)">${r.department||'—'}</div></div><div style="text-align:center"><span class="badge ${r.action}">${r.action.toUpperCase()}</span>${late}</div><div style="font-family:var(--mono);font-size:12px;color:var(--muted)">${t}</div></div>`;
+  }).join('');
+}
+
+function showAlert(msg){
+  const b=document.getElementById('alert-box');
+  b.innerHTML=`<div class="alert error">${msg}</div>`;
+}
+
+function showLeaveForm(){document.getElementById('leave-form').style.display='block';}
+
+async function submitLeave(){
+  const r=await fetch('/api/leave/request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({join_code:userCode,email:userEmail,leave_date:document.getElementById('leave-date').value,reason:document.getElementById('leave-reason').value})});
+  const d=await r.json();
+  if(d.success){document.getElementById('leave-form').style.display='none';alert('Leave request submitted! Your admin will review it.');}
+  else alert(d.error||'Failed to submit.');
+}
+</script>
+</body>
+</html>
